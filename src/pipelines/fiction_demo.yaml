@@ -1,14 +1,21 @@
-title: "Greyline OS Fiction Demo"
-mode: fiction
+title: "Demo Fiction Starter"
+mode: "fiction"
 sections:
-  - title: "Chapter 1 — The Signal in the Static"
+  - title: "Opening Image"
     content: >
-      The world of Greyline hums with rules, each paragraph checked and verified.
-      Stories are built deterministically, one section at a time.
-  - title: "Chapter 2 — The Editor's Echo"
+      Night settles over the harbor as the protagonist checks a battered notebook,
+      counting the reasons to leave and the few stubborn reasons to stay. The
+      water holds a rumor of storms, and the lights along the pier flicker like
+      promises someone forgot to keep, inviting a final, reckless decision soon.
+  - title: "Inciting Trouble"
     content: >
-      Across code and prose, the same laws hold: every draft must pass its
-      validator before rendering begins.
-  - title: "Chapter 3 — Provenance Rising"
+      A coded message arrives with the scent of salt and engine grease, naming a
+      meeting place only locals would recognize. The warning reads like a dare,
+      and pride answers before fear can argue. By choosing to go, our hero
+      invites allies, enemies, and consequences that spiral into the night quickly.
+  - title: "First Threshold"
     content: >
-      The manuscript reaches completion, logged and sealed, proof-bound by hash.
+      The warehouse groans around rusted beams while footsteps echo in measured
+      pairs, never hurried, never kind. A choice waits like a locked door: accept
+      help from someone unreliable or face the storm alone. The hinges creak,
+      the future narrows, and a stubborn courage finally pushes forward now.
