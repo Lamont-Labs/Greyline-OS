@@ -1,0 +1,5 @@
+title: "Fixture — Minimal"
+mode: nonfiction
+sections:
+  - title: "One"
+    content: "A minimal fixture to exercise CLI and tests."
