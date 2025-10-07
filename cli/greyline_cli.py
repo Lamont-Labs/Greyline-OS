@@ -2,7 +2,7 @@
 """
 Greyline OS — Deterministic Publishing Engine (Demo)
 CLI entry-point aligned with CI/Makefile:
-  - validate --in <yaml>
+  - validate --in <yaml> [--min-words N]
   - compile  --in <yaml> --out <md>
   - render   --in <yaml> --out <md> --prov <dir> [--min-words N]
   - sbom     --out SBOM/sbom.cdx.json
@@ -123,9 +123,9 @@ def render(
     min_words: int = typer.Option(20, "--min-words", help="Minimum words per section/response"),
 ):
     """Validate → Compile → Write MD → Record provenance (hash)."""
-    # 1) validate
+    # 1) validate (direct call — no .callback)
     try:
-        validate.callback(in_path=in_path, min_words=min_words)  # type: ignore
+        validate(in_path=in_path, min_words=min_words)
     except SystemExit as e:
         if e.code != 0:
             raise typer.Exit(code=1)
@@ -133,7 +133,7 @@ def render(
     # 2) compile to a temp MD then copy to 'out'
     tmp_md = Path("dist/demo_exports/MD/compiled.md")
     tmp_md.parent.mkdir(parents=True, exist_ok=True)
-    compile.callback(in_path=in_path, out=tmp_md)  # type: ignore
+    compile(in_path=in_path, out=tmp_md)
 
     _write_text(out, tmp_md.read_text(encoding="utf-8"))
 
@@ -145,7 +145,6 @@ def render(
 
     if checksums.exists():
         contents = checksums.read_text(encoding="utf-8").strip().splitlines()
-        # replace existing line for this file (idempotent)
         others = [c for c in contents if not c.startswith(f"{out},")]
         contents = others + [line]
         _write_text(checksums, "\n".join(contents) + "\n")
