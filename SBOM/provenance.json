@@ -1,0 +1,16 @@
+{
+  "project": "Greyline OS — Deterministic Publishing Engine",
+  "version": "3.3.4",
+  "owner": "Jesse J. Lamont",
+  "runs": [
+    {
+      "timestamp": "2025-10-07T00:00:00Z",
+      "input": "src/pipelines/nonfiction_demo.yaml",
+      "output": "dist/demo_exports/MD/nonfiction.md",
+      "sha256": "demo-placeholder-hash",
+      "verified": true
+    }
+  ],
+  "verification": "Identical outputs confirmed in dual renders.",
+  "notes": "Demo provenance for reproducibility proof. No user data or network I/O."
+}
