@@ -1,5 +1,6 @@
 # Greyline OS ™ — Deterministic Publishing Engine  
 Version 3.3.4  •  Owner: Jesse J. Lamont  •  Org: Lamont-Labs  
+[![greyline-demo-ci](https://github.com/Lamont-Labs/Greyline-OS/actions/workflows/ci.yml/badge.svg)](https://github.com/Lamont-Labs/Greyline-OS/actions/workflows/ci.yml)
 Status: Demo / Handoff Ready  •  Date: 2025-10-05  
 
 ## Purpose  
