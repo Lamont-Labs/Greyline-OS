@@ -1,0 +1,12 @@
+# Typst configuration for deterministic Greyline OS renders
+font:
+  family: "Noto Serif"
+  size: 12pt
+  spacing: 1.15
+page:
+  size: "6x9in"
+  margin: 1in
+metadata:
+  author: "Jesse J. Lamont"
+  title: "Greyline OS Demo Manuscript"
+  version: "3.3.4"
