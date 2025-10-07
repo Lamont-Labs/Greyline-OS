@@ -1,0 +1,14 @@
+title: "Greyline OS Fiction Demo"
+mode: fiction
+sections:
+  - title: "Chapter 1 — The Signal in the Static"
+    content: >
+      The world of Greyline hums with rules, each paragraph checked and verified.
+      Stories are built deterministically, one section at a time.
+  - title: "Chapter 2 — The Editor's Echo"
+    content: >
+      Across code and prose, the same laws hold: every draft must pass its
+      validator before rendering begins.
+  - title: "Chapter 3 — Provenance Rising"
+    content: >
+      The manuscript reaches completion, logged and sealed, proof-bound by hash.
