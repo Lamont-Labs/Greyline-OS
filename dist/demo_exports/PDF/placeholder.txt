@@ -1,0 +1,2 @@
+This folder stores rendered PDF demo outputs.
+Greyline OS produces deterministic export artifacts (simulated in this seed).
