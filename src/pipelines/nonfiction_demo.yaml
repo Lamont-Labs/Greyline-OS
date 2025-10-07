@@ -1,0 +1,15 @@
+title: "Greyline OS Nonfiction Demo"
+mode: nonfiction
+sections:
+  - title: "Section 1 — Opening Insight"
+    content: >
+      Greyline OS demonstrates deterministic publishing for nonfiction works.
+      Each section is validated for structure, tone, and wordcount.
+  - title: "Section 2 — Proof and Practice"
+    content: >
+      This section showcases a reproducible manuscript rendering pipeline,
+      turning YAML into text, then into Markdown, then into export formats.
+  - title: "Section 3 — Closing Reflection"
+    content: >
+      Proof over promises: Greyline enforces compliance, provenance, and
+      originality in every build.
