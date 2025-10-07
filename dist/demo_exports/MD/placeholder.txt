@@ -1,0 +1,2 @@
+This folder stores rendered Markdown outputs.
+Primary format used for deterministic proof-of-render.
