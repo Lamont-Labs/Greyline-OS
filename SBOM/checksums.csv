@@ -1,0 +1,5 @@
+file,sha256
+src/pipelines/nonfiction_demo.yaml,computed_in_demo
+src/pipelines/fiction_demo.yaml,computed_in_demo
+src/pipelines/journal_demo.yaml,computed_in_demo
+compiled.md,computed_in_demo
