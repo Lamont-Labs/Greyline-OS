@@ -1,0 +1,14 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "name": "greyline-os-demo",
+    "version": "3.3.4",
+    "tools": [
+      {"vendor": "Lamont-Labs", "name": "Greyline OS Demo", "version": "3.3.4"}
+    ]
+  },
+  "components": [],
+  "dependencies": []
+}
