@@ -1,17 +1,36 @@
-title: "Greyline OS Journal Demo"
-mode: journal
+title: "Demo Journal — 7 Days"
+mode: "journal"
 entries:
   - day: 1
-    prompts:
-      - "What did you create today that did not exist yesterday?"
-      - "What rule helped you avoid drift?"
+    prompts: ["Gratitude", "Focus"]
     responses:
-      - "I drafted a clean section with structure locked."
-      - "Fail-closed validation forced focus."
+      - >
+        Today I appreciate having a clear checklist that keeps my effort aligned,
+        because small consistent steps beat frantic leaps. The structure turns chaos
+        into momentum, and that quiet relief helps me notice simple wins already.
+      - >
+        My focus is to finish one deliberate block without multitasking or chatter,
+        then commit results publicly. This builds trust with myself and proves
+        that steady progress can be measured, repeated, and improved tomorrow.
   - day: 2
-    prompts:
-      - "Where did you improve density without padding?"
-      - "What will you verify tomorrow?"
+    prompts: ["Reflection", "Improvement"]
     responses:
-      - "I added sensory detail, not filler."
-      - "Deterministic re-render hashes."
+      - >
+        Yesterday I rushed the ending of a task to log a quick win, which made
+        today harder than necessary. Next time I will close the loop completely,
+        documenting context so reentry is smooth and my energy stays available.
+      - >
+        I will reduce context switching by batching messages, scheduling short
+        reviews, and protecting deep work time. Protecting attention increases
+        quality, which compounds into calmer days and more reliable outcomes overall.
+  - day: 3
+    prompts: ["Momentum", "One Thing"]
+    responses:
+      - >
+        Momentum grows when friction shrinks, so I prepared files, commands,
+        and notes before starting. Beginning felt lighter, my pace steadier, and
+        the work produced clearer artifacts that will help tomorrow move faster again.
+      - >
+        The one thing that matters is completing a deterministic render plus
+        provenance update. If I deliver those artifacts cleanly, everything else
+        can follow without pressure because the system proves progress objectively.
