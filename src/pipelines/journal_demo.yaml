@@ -1,0 +1,17 @@
+title: "Greyline OS Journal Demo"
+mode: journal
+entries:
+  - day: 1
+    prompts:
+      - "What did you create today that did not exist yesterday?"
+      - "What rule helped you avoid drift?"
+    responses:
+      - "I drafted a clean section with structure locked."
+      - "Fail-closed validation forced focus."
+  - day: 2
+    prompts:
+      - "Where did you improve density without padding?"
+      - "What will you verify tomorrow?"
+    responses:
+      - "I added sensory detail, not filler."
+      - "Deterministic re-render hashes."
