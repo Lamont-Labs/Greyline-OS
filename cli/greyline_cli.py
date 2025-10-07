@@ -1,184 +1,211 @@
 #!/usr/bin/env python3
 """
-Greyline OS — Deterministic Publishing Engine
-CLI entry-point for demo validation, compilation, rendering, and provenance logging.
-Author: Jesse J. Lamont (Lamont Labs)
-Version: v3.3.4
+Greyline OS — Deterministic Publishing Engine (Demo)
+CLI entry-point aligned with CI/Makefile:
+  - validate --in <yaml>
+  - compile  --in <yaml> --out <md>
+  - render   --in <yaml> --out <md> --prov <dir> [--min-words N]
+  - sbom     --out SBOM/sbom.cdx.json
+Author: Jesse J. Lamont • Version: v3.3.4
 """
 
-import typer
-import yaml
-import json
 from pathlib import Path
+from typing import Dict, Any, List
 from hashlib import sha256
 from datetime import datetime
+import json
+import yaml
+import typer
 
-app = typer.Typer(add_completion=False, help="Greyline OS Deterministic Publishing CLI")
+app = typer.Typer(add_completion=False, help="Greyline OS — Deterministic Demo CLI")
 
-# ---------------------------------------------------------
-# Utility functions
-# ---------------------------------------------------------
-def read_yaml(path: Path):
-    """Read YAML file safely."""
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+# ---------------------------
+# Helpers
+# ---------------------------
+def _read_yaml(p: Path) -> Dict[str, Any]:
+    return yaml.safe_load(p.read_text(encoding="utf-8"))
 
-def write_json(path: Path, data: dict):
-    """Write JSON with deterministic formatting."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, sort_keys=True)
+def _write_text(p: Path, txt: str) -> None:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(txt, encoding="utf-8")
 
-def hash_file(path: Path):
-    """Return SHA-256 hash of a file’s contents."""
+def _hash_file(p: Path) -> str:
     h = sha256()
-    with open(path, "rb") as f:
+    with open(p, "rb") as f:
         while chunk := f.read(8192):
             h.update(chunk)
     return h.hexdigest()
 
-# ---------------------------------------------------------
-# Core CLI Commands
-# ---------------------------------------------------------
+def _sections_from(doc: Dict[str, Any]) -> List[str]:
+    mode = doc.get("mode")
+    if mode in ("nonfiction", "fiction"):
+        return [s.get("content", s.get("body", "")) for s in doc.get("sections", [])]
+    if mode == "journal":
+        out: List[str] = []
+        for e in doc.get("entries", []):
+            out.extend([str(r) for r in e.get("responses", [])])
+        return out
+    # fallback: try generic fields
+    return [str(x) for x in doc.get("sections", [])]
+
+# ---------------------------
+# Commands
+# ---------------------------
 @app.command()
-def validate(in_path: Path = typer.Argument(..., help="Path to YAML demo pipeline.")):
-    """
-    Validate a manuscript or pipeline YAML file for structural compliance.
-    """
-    typer.echo(f"[+] Validating pipeline → {in_path}")
+def validate(
+    in_path: Path = typer.Option(..., "--in", help="Input pipeline YAML"),
+    min_words: int = typer.Option(20, "--min-words", help="Minimum words per section/response"),
+):
+    """Validate a pipeline YAML for structure, placeholders, and minimal length."""
     if not in_path.exists():
-        typer.echo("[!] Error: input YAML not found.")
+        typer.echo(json.dumps({"ok": False, "error": "input_not_found", "path": str(in_path)}))
         raise typer.Exit(code=1)
 
-    data = read_yaml(in_path)
-    required = ["title", "sections"]
-    missing = [k for k in required if k not in data]
-    if missing:
-        typer.echo(f"[!] Validation failed. Missing keys: {missing}")
-        raise typer.Exit(code=1)
+    doc = _read_yaml(in_path)
+    violations: List[str] = []
 
-    typer.echo("[OK] Validation complete. Structure verified.")
-    return True
+    # basic keys
+    if "title" not in doc:
+        violations.append("missing:title")
+
+    # content checks
+    sections = _sections_from(doc)
+    if not sections:
+        violations.append("missing:sections_or_entries")
+
+    for i, text in enumerate(sections, 1):
+        wc = len(str(text).split())
+        if wc < min_words:
+            violations.append(f"too_short:section_{i}({wc}<{min_words})")
+        low = str(text).lower()
+        for tok in ("tbd", "lorem", "placeholder"):
+            if tok in low:
+                violations.append(f"forbidden_token:{tok}:section_{i}")
+
+    ok = len(violations) == 0
+    typer.echo(json.dumps({"ok": ok, "violations": violations, "count": len(sections)}, indent=2))
+    raise SystemExit(0 if ok else 1)
 
 
 @app.command()
 def compile(
-    in_path: Path = typer.Argument(..., help="Input YAML file."),
-    out: Path = typer.Option("dist/demo_exports/MD/demo_manuscript.md", help="Output path."),
+    in_path: Path = typer.Option(..., "--in", help="Input pipeline YAML"),
+    out: Path = typer.Option(..., "--out", help="Output Markdown path"),
 ):
-    """
-    Compile validated YAML into a deterministic Markdown manuscript.
-    """
-    typer.echo(f"[+] Compiling → {out}")
-    data = read_yaml(in_path)
-    manuscript = f"# {data.get('title','Untitled')}\n\n"
-    for sec in data.get("sections", []):
-        manuscript += f"## {sec.get('heading','Section')}\n{sec.get('body','')}\n\n"
+    """Compile YAML into a deterministic Markdown manuscript (structure only)."""
+    doc = _read_yaml(in_path)
+    title = doc.get("title", "Untitled Manuscript")
+    buf = [f"# {title}", ""]
 
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(manuscript.strip(), encoding="utf-8")
-    typer.echo("[OK] Manuscript compiled successfully.")
+    for idx, section in enumerate(doc.get("sections", []), 1):
+        hdr = section.get("title") or section.get("heading") or f"Section {idx}"
+        body = section.get("content") or section.get("body") or ""
+        buf.append(f"## {hdr}\n\n{body}\n")
+
+    if doc.get("mode") == "journal":
+        buf.append("## Journal Entries\n")
+        for e in doc.get("entries", []):
+            day = e.get("day", "?")
+            buf.append(f"### Day {day}\n")
+            for r in e.get("responses", []):
+                buf.append(f"- {r}")
+            buf.append("")
+
+    _write_text(out, "\n".join(buf).strip())
+    typer.echo(json.dumps({"compiled": str(out)}, indent=2))
 
 
 @app.command()
 def render(
-    source: Path = typer.Option("dist/demo_exports/MD/demo_manuscript.md", help="Source MD file."),
-    fmt: str = typer.Option("pdf", help="Target format: pdf | epub | docx | md"),
+    in_path: Path = typer.Option(..., "--in", help="Input pipeline YAML"),
+    out: Path = typer.Option(..., "--out", help="Rendered Markdown path (demo output)"),
+    prov: Path = typer.Option(Path("SBOM"), "--prov", help="Provenance directory"),
+    min_words: int = typer.Option(20, "--min-words", help="Minimum words per section/response"),
 ):
-    """
-    Simulate deterministic rendering to requested format.
-    """
-    typer.echo(f"[+] Rendering {source} → {fmt.upper()} (simulated)")
-    out_dir = Path(f"dist/demo_exports/{fmt.upper()}")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_file = out_dir / f"demo_output.{fmt}"
-    out_file.write_text(f"Rendered demo from {source}", encoding="utf-8")
-    typer.echo(f"[OK] Render complete → {out_file}")
+    """Validate → Compile → Write MD → Record provenance (hash)."""
+    # 1) validate
+    try:
+        validate.callback(in_path=in_path, min_words=min_words)  # type: ignore
+    except SystemExit as e:
+        if e.code != 0:
+            raise typer.Exit(code=1)
 
+    # 2) compile to a temp MD then copy to 'out'
+    tmp_md = Path("dist/demo_exports/MD/compiled.md")
+    tmp_md.parent.mkdir(parents=True, exist_ok=True)
+    compile.callback(in_path=in_path, out=tmp_md)  # type: ignore
 
-@app.command()
-def provenance(
-    target_dir: Path = typer.Option("SBOM", help="Directory to store provenance data."),
-):
-    """
-    Generate provenance logs and cumulative checksums for demo artifacts.
-    """
-    typer.echo("[+] Building provenance chain")
-    sbom_path = target_dir / "checksums.csv"
-    target_dir.mkdir(parents=True, exist_ok=True)
+    _write_text(out, tmp_md.read_text(encoding="utf-8"))
 
-    # gather demo exports
-    exports = sorted(Path("dist/demo_exports").rglob("*.*"))
-    records = []
-    for file in exports:
-        if file.is_file():
-            digest = hash_file(file)
-            records.append(f"{file},{digest}")
+    # 3) provenance
+    prov.mkdir(parents=True, exist_ok=True)
+    checksums = prov / "checksums.csv"
+    sha = _hash_file(out)
+    line = f"{out},{sha}"
 
-    sbom_path.write_text("\n".join(records), encoding="utf-8")
-    typer.echo(f"[OK] Provenance recorded → {sbom_path}")
-
-
-@app.command()
-def sbom(out: Path = typer.Option("SBOM/sbom.cdx.json", help="Output path for SBOM file")):
-    """
-    Generate a CycloneDX-style Software Bill of Materials for the current build.
-    """
-    typer.echo("[+] Creating SBOM document")
-    data = {
-        "project": "Greyline OS",
-        "version": "3.3.4",
-        "timestamp": datetime.utcnow().isoformat() + "Z",
-        "components": [
-            {"name": "greyline_core", "version": "1.0"},
-            {"name": "greyline_cli", "version": "1.0"},
-            {"name": "auto_editor", "version": "1.0"},
-        ],
-    }
-    write_json(out, data)
-    typer.echo(f"[OK] SBOM written to {out}")
-
-
-@app.command()
-def verify():
-    """
-    Compare previous and current checksum sets for reproducibility.
-    """
-    typer.echo("[+] Verifying determinism")
-    old_path = Path("SBOM/checksums.csv")
-    new_path = Path("SBOM/checksums_new.csv")
-    if not old_path.exists():
-        typer.echo("[!] No baseline checksums found.")
-        raise typer.Exit(code=1)
-
-    # Re-run provenance to generate fresh set
-    exports = sorted(Path("dist/demo_exports").rglob("*.*"))
-    lines = []
-    for f in exports:
-        if f.is_file():
-            lines.append(f"{f},{hash_file(f)}")
-    new_path.write_text("\n".join(lines), encoding="utf-8")
-
-    if old_path.read_text() == new_path.read_text():
-        typer.echo("[OK] Determinism verified — hashes match.")
+    if checksums.exists():
+        contents = checksums.read_text(encoding="utf-8").strip().splitlines()
+        # replace existing line for this file (idempotent)
+        others = [c for c in contents if not c.startswith(f"{out},")]
+        contents = others + [line]
+        _write_text(checksums, "\n".join(contents) + "\n")
     else:
-        typer.echo("[!] Mismatch detected — non-deterministic build.")
-        raise typer.Exit(code=1)
+        _write_text(checksums, line + "\n")
+
+    # minimal provenance.json
+    prov_json = prov / "provenance.json"
+    entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "input": str(in_path),
+        "output": str(out),
+        "sha256": sha,
+        "version": "3.3.4",
+    }
+    data = {"runs": [entry]}
+    if prov_json.exists():
+        try:
+            existing = json.loads(prov_json.read_text(encoding="utf-8"))
+            existing.get("runs", []).append(entry)
+            data = existing
+        except Exception:
+            pass
+    _write_text(prov_json, json.dumps(data, indent=2, sort_keys=True))
+
+    typer.echo(json.dumps({"out": str(out), "sha256": sha}, indent=2))
+
+
+@app.command()
+def sbom(
+    out: Path = typer.Option(Path("SBOM/sbom.cdx.json"), "--out", help="SBOM output path"),
+):
+    """Write a CycloneDX-like SBOM (demo placeholder) to --out."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.5",
+        "version": 1,
+        "metadata": {
+            "name": "greyline-os-demo",
+            "version": "3.3.4",
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "tools": [{"vendor": "Lamont-Labs", "name": "Greyline OS Demo", "version": "3.3.4"}],
+        },
+        "components": [],
+        "dependencies": [],
+    }
+    _write_text(out, json.dumps(payload, indent=2, sort_keys=True))
+    typer.echo(f"[OK] SBOM written: {out}")
 
 
 @app.command()
 def demo():
-    """
-    Run the full deterministic demo pipeline (validate → compile → render → provenance → verify).
-    """
-    typer.echo("=== Greyline OS Demo Pipeline ===")
-    validate(Path("src/pipelines/nonfiction_demo.yaml"))
-    compile(Path("src/pipelines/nonfiction_demo.yaml"))
-    render()
-    provenance()
+    """End-to-end demo: validate → compile → render → sbom."""
+    yaml_in = Path("src/pipelines/nonfiction_demo.yaml")
+    out_md = Path("dist/demo_exports/MD/nonfiction_rendered.md")
+    validate(in_path=yaml_in)
+    compile(in_path=yaml_in, out=out_md)
+    render(in_path=yaml_in, out=out_md, prov=Path("SBOM"))
     sbom()
-    verify()
-    typer.echo("=== Demo pipeline complete ===")
 
 
 if __name__ == "__main__":
