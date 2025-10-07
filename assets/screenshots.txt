@@ -1,0 +1,8 @@
+SCREENSHOT 1 — CLI Validation
+> python cli/greyline_cli.py validate --in src/pipelines/nonfiction_demo.yaml
+
+SCREENSHOT 2 — Rendering
+> python cli/greyline_cli.py render --in src/pipelines/nonfiction_demo.yaml --out dist/demo_exports/MD/out.md
+
+SCREENSHOT 3 — Provenance Hash Log
+> cat SBOM/provenance.json
