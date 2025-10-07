@@ -1,0 +1,29 @@
+name: greyline-demo-ci
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt typer pyyaml
+      - name: Run deterministic demo validation
+        run: |
+          python cli/greyline_cli.py validate --in src/pipelines/nonfiction_demo.yaml
+      - name: Render demo manuscript
+        run: |
+          python cli/greyline_cli.py render --in src/pipelines/nonfiction_demo.yaml --out dist/demo_exports/MD/nonfiction_rendered.md --prov SBOM
+      - name: Run provenance verification
+        run: bash verify.sh
