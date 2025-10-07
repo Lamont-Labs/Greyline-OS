@@ -1,0 +1,2 @@
+This folder stores rendered EPUB demo outputs.
+EPUB generation is stubbed for demo purposes. No external converters required.
